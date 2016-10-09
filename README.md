@@ -17,7 +17,7 @@ There are then some examples of how to introduce _jackson_ and _simple-json_ if 
 _java.net_ APIs are ugly, hence projects often use _netty_ or _http-client_, these dependencies often cause issues.
 _http-client_ has been through non-backwards iterations. Core Java APIs are a lot more stable.
 
-There is a maven `pom.xml` provided but its expected the sensible way to use this code is to copy paste `Dep3Rest.java`.  Having a dependency
+There is a maven `pom.xml` provided but its expected the sensible way to use this code is to copy paste [Dep3Rest.java](https://raw.githubusercontent.com/teknopaul/dep3rest/master/src/main/java/org/tp23/dep3rest/Dep3Rest.java).  Having a dependency
 on this project defeats the main goal.
 
 ## JUnit tests

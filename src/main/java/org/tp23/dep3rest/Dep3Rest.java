@@ -11,19 +11,32 @@ import java.util.*;
  * Default version expects the client to provide JSON as strings and to handle JSON as strings in the response.
  * Check subclasses for alternatives.
  *
- * Not thread safe use a new instance for each request.
+ * Not thread safe use a new instance for each request, instance can be rec¡ycled with reset(), its not heavy enought to be worth caching or pooling
  * java.net may reuse underlying network resources in a thread safe manner.
+ *
+ * For usage, check the JUnit tests.
  *
  * @author teknopaul
  * Copyright 2016 LGPL
  */
 public class Dep3Rest <I, O> {
 
+	/**
+	 * Maximum HTTP headers to parse, java.net APIs don't tell us how many there are
+	 */
 	public static final int MAX_HEADERS = 99;
+	/**
+	 * Copy buffer size when writing JSON strings to the stream.
+	 */
 	public static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
-
+	/**
+	 * Content-Type header for POSTed data.
+	 */
 	protected String contentType = "application/json";
-
+	/**
+	 * Base URL of the REST API, concatenated to path.
+	 * e.g http://someserver:8080/myapi
+	 */
 	private String urlBase;
 
 	private Map<String, String> requestHeaders;
@@ -34,7 +47,7 @@ public class Dep3Rest <I, O> {
 	}
 
 	/**
-	 * Execute a GET method
+	 * Execute a GET method.
 	 */
 	public O get(String path) throws IOException {
 		return execute("GET", path, null);
@@ -50,11 +63,39 @@ public class Dep3Rest <I, O> {
 	}
 
 	/**
+	 * Get the value of a response header, if there are duplicate headers this returns the last one.
+	 */
+	public String getHeaders(String name) {
+		return responseHeaders.get(name);
+	}
+
+	/**
+	 * Add a request HTTP header, e.g. Authorization.
+	 * Clearly, this only works if called before executing the request.
+	 */
+	public void addHeader(String name, String value) {
+		if (requestHeaders == null) requestHeaders = new HashMap<>();
+		requestHeaders.put(name, value);
+	}
+
+	/**
+	 * Reset so this object can be reused.
+	 */
+	public void reset() {
+		contentType = "application/json";
+		requestHeaders = null;
+		responseHeaders = new HashMap<>();
+	}
+	/**
+	 * Execute the HTTP request and return a response, input and output type defined by the
+	 * generics I (input) and O (output) by defauilt these are both java.lang.String of JSON.
+	 * Only POST and PUT have input JSON, there is not necessarily an Output object.
+	 *
 	 * @param method GET POST etc
 	 * @param path   /foo/myapi
 	 * @param json   Should be a String unless you override read and write methods
-	 * @return
-	 * @throws IOException
+	 *
+	 * @throws IOException String message will be the HTTP response code if a response was received.
 	 */
 	protected O execute(String method, String path, I json) throws IOException {
 		URL url = new URL(urlBase + path);
@@ -87,10 +128,12 @@ public class Dep3Rest <I, O> {
 		if (respCode >= 200 && respCode < 300) {
 			return read(con);
 		}
-
-		throw new IOException(String.valueOf(respCode));
+		else {
+			return handleError(respCode, con);
+		}
 
 	}
+
 
 	/**
 	 * Probably want to overwrite this method to handle a different object, e.g. jackson or jaxb.
@@ -116,8 +159,14 @@ public class Dep3Rest <I, O> {
 		return (O) sw.toString();
 	}
 
+	protected O handleError(int respCode, HttpURLConnection con) throws IOException {
+		// You might want to read the response anyway here,
+		// often your O will be the wrong type so throwing an exception is easier
+		throw new IOException(String.valueOf(respCode));
+	}
+
 	/**
-	 * Copied from commons IOUtils
+	 * Copied from commons IOUtils, copyright Apache
 	 */
 	public static void copy(Reader input, Writer output) throws IOException {
 		char[] buffer = new char[DEFAULT_BUFFER_SIZE];
@@ -145,21 +194,10 @@ public class Dep3Rest <I, O> {
 		}
 	}
 
-	public String getHeaders(String name) {
-		return responseHeaders.get(name);
-	}
-
-	public void addHeader(String name, String value) {
-		if (requestHeaders == null) requestHeaders = new HashMap<>();
-		requestHeaders.put(name, value);
-	}
-
-	public void reset() {
-		contentType = "application/json";
-		requestHeaders = null;
-		responseHeaders = new HashMap<>();
-	}
-
+	/**
+	 * Dependency free logging.
+	 * Subclasses should probably override to do nothing or log with the desired logging framework.
+	 */
 	protected void debug(String message) {
 		System.out.println(message);
 	}
