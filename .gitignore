@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 .git/
 .bzr/
+=======
+>>>>>>> 1d2dfee7750ddc8dcd4566dfa7c32e12c214c097
 .idea/
 target/
 dep3rest.iml

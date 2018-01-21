@@ -1,5 +1,7 @@
 package org.tp23.dep3rest;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -16,6 +18,8 @@ import java.net.HttpURLConnection;
  * @author teknopaul
  */
 public class JsonSimpleRest<I, O> extends Dep3Rest<I, O> {
+
+	private static final Logger LOG = LogManager.getLogger();
 
 	public JsonSimpleRest(String urlBase) {
 		super(urlBase);
@@ -39,5 +43,10 @@ public class JsonSimpleRest<I, O> extends Dep3Rest<I, O> {
 		catch (ParseException pe) {
 			throw new IOException(pe);
 		}
+	}
+
+	@Override
+	public void debug(String message) {
+		LOG.debug(message);
 	}
 }
